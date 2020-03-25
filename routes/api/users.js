@@ -4,9 +4,10 @@ const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const keys = require('../../config/keys');
+const passport = require('passport');
 const router = express.Router();
 
-// @route   Post api/users/register
+// @route   POST api/users/register
 // @desc Register user
 // @access  Public
 router.post('/register', (req, res) => {
@@ -30,7 +31,7 @@ return res.status(400).json({email: 'Email already exists!'})
 
     bcrypt.genSalt(10, (err, salt) => {
        if (err) throw err;
-       bcrypt.hash(newUser.password, salt, (err, hash) =>{
+       bcrypt.hash(newUser.password, salt, (err, hash) => {
          newUser.password = hash;
          newUser.save()
          .then(user => res.json(user))
@@ -42,14 +43,14 @@ return res.status(400).json({email: 'Email already exists!'})
 .catch(err => console.log(err))
 
 });
-// @route   Post api/users/login
+// @route   POST api/users/login
 // @desc Login user
 // @access  Public
 router.post('/login', (req,res)=> {
   User.findOne({email: req.body.email})
   .then(user => {
     if(!user){
-      return res.status(404).json({email: 'User not found'});
+      return res.status(404).json({email: 'User not found!'});
     } else {
       bcrypt.compare(req.body.password, user.password)
       .then(isMatch => {
@@ -76,10 +77,28 @@ router.post('/login', (req,res)=> {
             return res.status(400).json({password: 'Password incorrect!'});
           }
       })
+
+
     }
 
   })
     .catch(err => console.log(err));
 })
+
+
+// @route   GET api/users/current
+// @desc Return current user information
+// @access  Private
+router.get(
+  '/current',
+passport.authenticate('jwt', {session: false}),
+(req, res) => {
+res.json({
+  name: req.user.name,
+  email: req.user.email,
+});
+}
+);
+
 
 module.exports = router;

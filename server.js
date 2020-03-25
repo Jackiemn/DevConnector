@@ -24,7 +24,7 @@ mongoose
 //Passport middleware
 app.use(passport.initialize());
 //Passport config
-
+require('./config/passport')(passport)
 
 //let's write our first route
 app.get('/', (req,res) => res.send('Hello!'));
