@@ -6,11 +6,18 @@ const jwt = require('jsonwebtoken');
 const keys = require('../../config/keys');
 const passport = require('passport');
 const router = express.Router();
+const validateRegisterInput = require('../../validation/register');
+const validateLoginInput = require('../../validation/login');
 
 // @route   POST api/users/register
 // @desc Register user
 // @access  Public
 router.post('/register', (req, res) => {
+ const {errors, isValid} = validateRegisterInput(req.body)
+if(!isValid) {
+  return res.status(400).json(errors);
+} 
+
 User.findOne({email: req.body.email})
 .then (user => {
   if (user){
@@ -41,16 +48,22 @@ return res.status(400).json({email: 'Email already exists!'})
   }
 })
 .catch(err => console.log(err))
-
 });
+
 // @route   POST api/users/login
-// @desc Login user
+// @desc    Login user
 // @access  Public
 router.post('/login', (req,res)=> {
+
+  const {errors, isValid} = validateLoginInput(req.body)
+if(!isValid) {
+  return res.status(400).json(errors);
+} 
+
   User.findOne({email: req.body.email})
   .then(user => {
     if(!user){
-      return res.status(404).json({email: 'User not found!'});
+      return res.status(400).json({email: 'User not found!'});
     } else {
       bcrypt.compare(req.body.password, user.password)
       .then(isMatch => {
